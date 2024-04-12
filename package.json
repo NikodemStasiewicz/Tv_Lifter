@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node dist/connect.js",
+    "dev": "nodemon src/connect.ts",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
@@ -12,5 +14,10 @@
   "dependencies": {
     "socket.io": "^4.7.5",
     "telnet-stream": "^1.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
   }
 }
