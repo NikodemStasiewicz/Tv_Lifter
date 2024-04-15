@@ -24,30 +24,49 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const net = __importStar(require("net"));
-const PORT = 3003;
+const wp = __importStar(require("workerpool"));
+const PORTS = [3003, 3004, 3005, 3006, 3007]; // Lista portów do nasłuchiwania
 const IP = '127.0.0.1';
 const BACKLOG = 100;
-net.createServer()
-    .listen(PORT, IP, BACKLOG)
-    .on('connection', socket => socket
-    .on('data', buffer => {
-    const request = buffer.toString();
-    socket.write('hello world');
-    socket.end();
-}));
-const parseRequest = (s) => {
-    const [firstLine, rest] = divideStringOn(s, '\r\n');
-    const [method, url, protocol] = firstLine.split(' ', 3);
-    const [headers, body] = divideStringOn(rest, '\r\n\r\n');
-    const parsedHeaders = headers.split('\r\n').reduce((map, header) => {
-        const [key, value] = divideStringOn(header, ': ');
-        return map.set(key, value);
-    }, new Map());
-    return { protocol, method, url, headers: parsedHeaders, body };
+const workerpool = wp.pool();
+// Funkcja do kompilowania odpowiedzi HTTP
+const compileResponse = (response) => {
+    const headers = [
+        `HTTP/1.1 ${response.statusCode} ${response.status}`,
+        'Content-Type: text/html',
+        `Content-Length: ${response.body.length}`,
+        '',
+        response.body
+    ].join('\r\n');
+    return headers;
 };
-const divideStringOn = (s, search) => {
-    const index = s.indexOf(search);
-    const first = s.slice(0, index);
-    const rest = s.slice(index + search.length);
-    return [first, rest];
+// Funkcja do generowania ciągu Fibonacciego
+const fibonacci = (n) => (n < 2) ? n : fibonacci(n - 2) + fibonacci(n - 1);
+// Funkcja obsługująca połączenie
+const handleConnection = (port) => (socket) => {
+    console.log(`New connection on port ${port}`);
+    socket.on('data', buffer => {
+        console.log(`Data received on port ${port}`);
+        // Obsługa żądania
+        const responseBody = `<html><body><h1>Content ${port}!</h1></body></html>`;
+        const response = compileResponse({
+            statusCode: 200,
+            status: 'OK',
+            body: responseBody
+        });
+        socket.write(response);
+        console.log(`Response sent on port ${port}`);
+        socket.end();
+        console.log(`Connection closed on port ${port}`);
+    });
 };
+// Tworzenie serwera na każdym z portów
+const servers = PORTS.map(port => {
+    const server = net.createServer();
+    server.listen(port, IP, BACKLOG);
+    server.on('listening', () => {
+        console.log(`Server listening on port ${port}`);
+    });
+    server.on('connection', handleConnection(port));
+    return server;
+});
