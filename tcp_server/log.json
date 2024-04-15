@@ -1,0 +1,4 @@
+{"type":"received","port":3004,"data":"GET / HTTP/1.1\r\nUser-Agent: Mozilla/5.0 (Windows NT; Windows NT 10.0; pl-PL) WindowsPowerShell/5.1.19041.4291\r\nHost: 127.0.0.1:3004\r\nConnection: Keep-Alive\r\n\r\n"}
+{"type":"sent","port":3004,"data":"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 48\r\n\r\n<html><body><h1>Content 3004!</h1></body></html>"}
+{"type":"received","port":3005,"data":"GET / HTTP/1.1\r\nUser-Agent: Mozilla/5.0 (Windows NT; Windows NT 10.0; pl-PL) WindowsPowerShell/5.1.19041.4291\r\nHost: 127.0.0.1:3005\r\nConnection: Keep-Alive\r\n\r\n"}
+{"type":"sent","port":3005,"data":"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 48\r\n\r\n<html><body><h1>Content 3005!</h1></body></html>"}

@@ -25,10 +25,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const net = __importStar(require("net"));
 const wp = __importStar(require("workerpool"));
+const fs = __importStar(require("fs"));
 const PORTS = [3003, 3004, 3005, 3006, 3007]; // Lista portów do nasłuchiwania
 const IP = '127.0.0.1';
 const BACKLOG = 100;
 const workerpool = wp.pool();
+const logFilePath = 'log.json'; // Ścieżka do pliku JSON, w którym będziemy zapisywać logi
 // Funkcja do kompilowania odpowiedzi HTTP
 const compileResponse = (response) => {
     const headers = [
@@ -47,6 +49,8 @@ const handleConnection = (port) => (socket) => {
     console.log(`New connection on port ${port}`);
     socket.on('data', buffer => {
         console.log(`Data received on port ${port}`);
+        // Zapisz otrzymane dane do pliku logów
+        appendToLog({ type: 'received', port: port, data: buffer.toString("utf8") });
         // Obsługa żądania
         const responseBody = `<html><body><h1>Content ${port}!</h1></body></html>`;
         const response = compileResponse({
@@ -58,6 +62,16 @@ const handleConnection = (port) => (socket) => {
         console.log(`Response sent on port ${port}`);
         socket.end();
         console.log(`Connection closed on port ${port}`);
+        // Zapisz wysłane dane do pliku logów
+        appendToLog({ type: 'sent', port: port, data: response });
+    });
+};
+// Funkcja do zapisywania danych do pliku JSON
+const appendToLog = (data) => {
+    fs.appendFile(logFilePath, JSON.stringify(data) + '\n', (err) => {
+        if (err) {
+            console.error('Error appending to log file:', err);
+        }
     });
 };
 // Tworzenie serwera na każdym z portów
