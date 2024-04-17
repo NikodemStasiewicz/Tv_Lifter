@@ -22,34 +22,63 @@ const compileResponse = (response: any) => {
   return headers;
 };
 
-// Funkcja do generowania ciągu Fibonacciego
-const fibonacci = (n: number): number => (n < 2) ? n : fibonacci(n - 2) + fibonacci(n - 1);
-
 // Funkcja obsługująca połączenie
-const handleConnection = (port: number) => (socket: net.Socket) => {
-  console.log(`New connection on port ${port}`);
-  socket.on('data', buffer => {
-    console.log(`Data received on port ${port}`);
-
-    // Zapisz otrzymane dane do pliku logów
-    appendToLog({ type: 'received', port: port, data: buffer.toString("utf8") });
-
-    // Obsługa żądania
-    const responseBody = `<html><body><h1>Content ${port}!</h1></body></html>`;
-    const response = compileResponse({
-      statusCode: 200,
-      status: 'OK',
-      body: responseBody
+const handleConnection = (port: number) => {
+  console.log(`Server listening on port ${port}`);
+  
+  return (socket: net.Socket) => {
+    console.log(`New connection on port ${port}`);
+    
+    socket.write("Welcome to Telnet server!\r\n"); // Wysłanie wiadomości powitalnej
+    
+    let buffer = ''; // Bufor do przechowywania danych
+    
+    socket.on('data', data => {
+      buffer += data.toString(); // Dodanie otrzymanych danych do bufora
+      
+      // Jeśli otrzymano znak nowej linii (Enter)
+      if (data.includes('\n')) {
+        // Przetworzenie danych w buforze
+        processData(buffer.trim(), port, socket);
+        // Wyczyszczenie bufora
+        buffer = '';
+      }
     });
+  
+    socket.on('end', () => {
+      if (buffer.length > 0) {
+        processData(buffer.trim(), port, socket);
+      }
+      console.log(`Connection closed on port ${port}`);
+    });
+  
+    socket.on('error', err => {
+      console.error(`Error in connection on port ${port}:`, err);
+    });
+  };
+};
 
-    socket.write(response);
-    console.log(`Response sent on port ${port}`);
-    socket.end();
-    console.log(`Connection closed on port ${port}`);
-
-    // Zapisz wysłane dane do pliku logów
-    appendToLog({ type: 'sent', port: port, data: response });
+// Funkcja do przetwarzania danych
+const processData = (data: string, port: number, socket: net.Socket) => {
+  console.log(`Data received on port ${port}: ${data}`);
+  
+  // Zapisz otrzymane dane do pliku logów
+  appendToLog({ type: 'received', port: port, data: data });
+  
+  // Tworzenie odpowiedzi na podstawie otrzymanych danych
+  const responseBody = `<html><body><h1>Received: ${data}</h1></body></html>`;
+  const response = compileResponse({
+    statusCode: 200,
+    status: 'OK',
+    body: responseBody
   });
+  
+  // Wysłanie odpowiedzi do klienta Telnet
+  socket.write(response);
+  console.log(`Response sent on port ${port}: ${response}`);
+  
+  // Zapisz wysłane dane do pliku logów
+  appendToLog({ type: 'sent', port: port, data: response });
 };
 
 // Funkcja do zapisywania danych do pliku JSON
@@ -63,11 +92,7 @@ const appendToLog = (data: any) => {
 
 // Tworzenie serwera na każdym z portów
 const servers = PORTS.map(port => {
-  const server = net.createServer();
+  const server = net.createServer(handleConnection(port));
   server.listen(port, IP, BACKLOG);
-  server.on('listening', () => {
-    console.log(`Server listening on port ${port}`);
-  });
-  server.on('connection', handleConnection(port));
   return server;
 });

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const telnet_stream_1 = require("telnet-stream");
 // create a Socket connection
-const socket = require("net").createConnection(3000, "godwars2.org");
+const socket = require("net").createConnection(3000, "localhost:3003");
 // decorate the Socket connection as a TelnetSocket
 const tSocket = new telnet_stream_1.TelnetSocket(socket);
 // if the socket closes, terminate the program

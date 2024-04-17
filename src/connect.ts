@@ -2,7 +2,7 @@ import { TelnetSocket } from "telnet-stream";
 import { SocketConnectOpts, AddressInfo } from "net";
 
 // create a Socket connection
-const socket = require("net").createConnection(3000, "godwars2.org");
+const socket = require("net").createConnection(3003, "127.0.0.1");
 
 // decorate the Socket connection as a TelnetSocket
 const tSocket: TelnetSocket = new TelnetSocket(socket);
